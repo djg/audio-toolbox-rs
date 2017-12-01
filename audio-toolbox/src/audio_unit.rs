@@ -1,4 +1,5 @@
 use core_audio::{AudioBufferList, AudioTimeStamp, Result};
+use audio_output_unit::AudioOutputUnit;
 use ffi_binding::Binding;
 use std::mem;
 use std::os::raw::c_void;
@@ -110,19 +111,9 @@ impl Binding for AudioUnitRenderActionFlags {
     }
 }
 
-pub struct AudioUnitProperty(ffi::AudioUnitPropertyID);
-
-impl Binding for AudioUnitProperty {
-    type Ffi = ffi::AudioUnitPropertyID;
-    fn as_ffi(&self) -> Self::Ffi {
-        self.0
-    }
-    unsafe fn from_ffi(ffi: Self::Ffi) -> Self {
-        AudioUnitProperty(ffi)
-    }
-}
-
+pub type AudioUnitProperty = ffi::AudioUnitPropertyID;
 pub type AudioUnitElement = u32;
+
 // pub type AudioUnitParameterID = u32;
 #[derive(Clone, Copy, Debug)]
 pub struct AudioUnitParameter(ffi::AudioUnitParameterID);
@@ -137,27 +128,15 @@ impl Binding for AudioUnitParameter {
     }
 }
 
-struct AudioUnitParameterEventRamp {
-    pub startBufferOffset: i32,
-    pub durationInFrames: u32,
-    pub startValue: f32,
-    pub endValue: f32,
-}
-
-struct AudioUnitParameterEventImmediate {
-    pub bufferOffset: u32,
-    pub value: f32,
-}
-
 pub enum AudioUnitParameterEventData {
     Ramp {
-        startBufferOffset: i32,
-        durationInFrames: u32,
-        startValue: f32,
-        endValue: f32,
+        start_buffer_offset: i32,
+        duration_in_frames: u32,
+        start_value: f32,
+        end_value: f32,
     },
     Immediate {
-        bufferOffset: u32,
+        buffer_offset: u32,
         value: f32,
     }
 }
@@ -169,6 +148,7 @@ pub struct AudioUnitParameterEvent {
     pub event: AudioUnitParameterEventData,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AudioUnitScope {
     Global,
     Input,
@@ -257,7 +237,7 @@ impl AudioUnit {
         let mut writable: ffi::Boolean = 0;
         unsafe {
             try_call!(ffi::AudioUnitGetPropertyInfo(self.as_ffi(),
-                                                    id.as_ffi(),
+                                                    id,
                                                     scope.as_ffi(),
                                                     element,
                                                     &mut data_size as *mut _,
@@ -275,7 +255,7 @@ impl AudioUnit {
         let mut data_size = mem::size_of::<T>() as u32;
         unsafe {
             try_call!(ffi::AudioUnitGetProperty(self.as_ffi(),
-                                                id.as_ffi(),
+                                                id,
                                                 scope.as_ffi(),
                                                 element,
                                                 &mut data as *mut _ as *mut _,
@@ -284,6 +264,24 @@ impl AudioUnit {
         Ok(data)
     }
 
+    pub fn get_property_array<T>(&self,
+                                 id: AudioUnitProperty,
+                                 scope: AudioUnitScope,
+                                 element: AudioUnitElement) -> Result<Vec<T>> {
+        let (mut data_size, _) = try!(self.get_property_info(id, scope, element));
+        let mut data = Vec::<T>::with_capacity(data_size as _);
+        unsafe {
+            try_call!(ffi::AudioUnitGetProperty(self.as_ffi(),
+                                                id,
+                                                scope.as_ffi(),
+                                                element,
+                                                data.as_mut_ptr() as *mut _,
+                                                &mut data_size));
+        }
+        Ok(data)
+    }
+        
+    
     pub fn set_property<T>(&mut self,
                            id: AudioUnitProperty,
                            scope: AudioUnitScope,
@@ -291,11 +289,27 @@ impl AudioUnit {
                            data: &T) -> Result<()> {
         unsafe {
             try_call!(ffi::AudioUnitSetProperty(self.as_ffi(),
-                                                id.as_ffi(),
+                                                id,
                                                 scope.as_ffi(),
                                                 element,
                                                 &data as *const _ as *const _,
                                                 mem::size_of::<T>() as u32));
+        }
+        Ok(())
+    }
+
+    pub fn set_property_array<T>(&mut self,
+                                 id: AudioUnitProperty,
+                                 scope: AudioUnitScope,
+                                 element: AudioUnitElement,
+                                 data: &[T]) -> Result<()> {
+        unsafe {
+            try_call!(ffi::AudioUnitSetProperty(self.as_ffi(),
+                                                id,
+                                                scope.as_ffi(),
+                                                element,
+                                                data.as_ptr() as *const _,
+                                                data.len() as u32));
         }
         Ok(())
     }
@@ -308,7 +322,7 @@ impl AudioUnit {
         let cb: ffi::AudioUnitPropertyListenerProc = audio_unit_property_listener;
         unsafe {
             try_call!(ffi::AudioUnitAddPropertyListener(self.as_ffi(),
-                                                        id.as_ffi(),
+                                                        id,
                                                         Some(cb),
                                                         thunk as *mut _));
         }
@@ -320,7 +334,7 @@ impl AudioUnit {
         let cb: ffi::AudioUnitPropertyListenerProc = audio_unit_property_listener;
         unsafe {
             try_call!(ffi::AudioUnitRemovePropertyListenerWithUserData(self.as_ffi(),
-                                                                       id.as_ffi(),
+                                                                       id,
                                                                        Some(cb),
                                                                        handle.thunk as *mut _));
             drop(Box::from_raw(handle.thunk));
@@ -345,12 +359,10 @@ impl AudioUnit {
 
     pub unsafe fn remove_render_notify(&self, handle: AudioUnitRenderHandle) -> Result<()> {
         let cb: ffi::AURenderCallback = audio_unit_render_cb;
-        unsafe {
-            try_call!(ffi::AudioUnitRemoveRenderNotify(self.as_ffi(),
-                                                       Some(cb),
-                                                       handle.thunk as *mut _));
-            drop(Box::from_raw(handle.thunk));
-        }
+        try_call!(ffi::AudioUnitRemoveRenderNotify(self.as_ffi(),
+                                                   Some(cb),
+                                                   handle.thunk as *mut _));
+        drop(Box::from_raw(handle.thunk));
         Ok(())
     }
 
@@ -385,7 +397,7 @@ impl AudioUnit {
         Ok(())
     }
 
-    pub fn schedule_parameters(&self, events: &[AudioUnitParameterEvent]) -> Result<()> {
+    pub fn schedule_parameters(&self, _events: &[AudioUnitParameterEvent]) -> Result<()> {
         let events = Vec::new();
         unsafe {
             try_call!(ffi::AudioUnitScheduleParameters(self.as_ffi(),
@@ -431,6 +443,7 @@ impl AudioUnit {
         Ok(())
     }
 
+        /*
     pub fn process_multiple(&self,
                             action: &mut AudioUnitRenderActionFlags,
                             time_stamp: &AudioTimeStamp,
@@ -438,7 +451,6 @@ impl AudioUnit {
                             number_input_buffer_lists: u32,
                             input_buffer_lists: &[&AudioBufferList],
                             output_buffer_lists: &[&mut AudioBufferList]) -> Result<()> {
-        /*
     pub fn AudioUnitProcessMultiple(
         inUnit: AudioUnit,
         ioActionFlags: *mut AudioUnitRenderActionFlags,
@@ -449,15 +461,32 @@ impl AudioUnit {
         inNumberOutputBufferLists: u32,
         ioOutputBufferLists: *mut *mut AudioBufferList,
     ) -> OSStatus;
-         */
         Ok(())
     }
+         */
 
     pub fn reset(&self, scope: AudioUnitScope, element: AudioUnitElement) -> Result<()> {
         unsafe {
             try_call!(ffi::AudioUnitReset(self.as_ffi(), scope.as_ffi(), element))
         }
         Ok(())
+    }
+}
+
+impl AudioOutputUnit {
+    pub fn set_input_callback<CB>(&mut self, cb: CB) -> Result<AudioUnitRenderHandle> 
+        where CB: FnMut(&AudioUnitRenderActionFlags, &AudioTimeStamp, u32, u32, &mut AudioBufferList) + Send + 'static
+    {
+        let thunk = Box::into_raw(Box::new(CallbackThunk {
+            cb: Box::new(cb) as Box<AudioUnitRenderCB>
+        }));
+
+        let data = ffi::AURenderCallbackStruct {
+            inputProc: Some(audio_unit_render_cb),
+            inputProcRefCon: thunk as *mut _,
+        };
+        try!(self.set_property(Self::SET_INPUT_CALLBACK, AudioUnitScope::Global, 0, &data));
+        Ok(CallbackHandle { thunk: thunk })
     }
 }
 
@@ -489,7 +518,6 @@ pub extern fn audio_unit_property_listener(ref_con: *mut c_void,
         let payload = &mut *(ref_con as *mut CallbackThunk<AudioUnitPropertyListenerCB>);
         let callback = &mut payload.cb;
         let unit = AudioUnit::from_ffi(unit);
-        let id = AudioUnitProperty::from_ffi(id);
         let scope = AudioUnitScope::from_ffi(scope);
         callback(unit, id, scope, element);
     });

@@ -1,7 +1,7 @@
 use audio_toolbox_sys as ffi;
+use core_audio::Result;
 use ffi_binding::Binding;
-
-use std::ptr;
+use std::{mem, ptr};
 
 bitflags! {
     pub struct AudioComponentFlags: ffi::AudioComponentFlags {
@@ -13,28 +13,41 @@ bitflags! {
 pub struct AudioComponentDescription(ffi::AudioComponentDescription);
 
 impl AudioComponentDescription {
-    pub fn new() -> Self {
-        AudioComponentDescription(Default::default())
+    pub fn new(kind: ffi::OSType,
+               sub_kind: ffi::OSType,
+               manufacturer: ffi::OSType) -> Self {
+        AudioComponentDescription(ffi::AudioComponentDescription {
+            componentType: kind,
+            componentSubType: sub_kind,
+            componentManufacturer: manufacturer,
+            ..Default::default()
+        })
     }
 
-    pub fn kind(&mut self, kind: ffi::OSType) -> &mut Self {
-        self.0.componentType = kind;
-        self
+    pub fn kind(&self) -> ffi::OSType {
+        self.0.componentType
     }
 
-    pub fn sub_kind(&mut self, kind: ffi::OSType) -> &mut Self {
-        self.0.componentSubType = kind;
-        self
+    pub fn sub_kind(&self) -> ffi::OSType {
+        self.0.componentSubType 
     }
 
-    pub fn flags(&mut self, flags: u32) -> &mut Self {
-        self.0.componentFlags = flags;
-        self
+    pub fn manufacturer(&self) -> ffi::OSType {
+        self.0.componentManufacturer 
+    }
+    
+    pub fn flags(&self) -> u32 {
+        self.0.componentFlags
     }
 
-    pub fn flags_mask(&mut self, mask: u32) -> &mut Self {
-        self.0.componentFlagsMask = mask;
-        self
+    pub fn count(&self) -> usize {
+        unsafe {
+            call!(ffi::AudioComponentCount(self.as_ffi())) as _
+        }
+    }
+
+    pub fn as_ffi_mut(&mut self) -> *mut ffi::AudioComponentDescription {
+        &mut self.0
     }
 }
 
@@ -58,6 +71,32 @@ impl AudioComponent {
         AudioComponentIter {
             comp: AudioComponent(ptr::null_mut()),
             desc: desc,
+        }
+    }
+
+    pub fn description(&self) -> Result<AudioComponentDescription> {
+        let mut desc = AudioComponentDescription::default();
+        unsafe {
+            try_call!(ffi::AudioComponentGetDescription(self.as_ffi(),
+                                                        desc.as_ffi_mut()));
+        }
+        Ok(desc)
+    }
+    
+    pub fn version(&self) -> Result<u32> {
+        let mut version = 0u32;
+        unsafe {
+            try_call!(ffi::AudioComponentGetVersion(self.as_ffi(), &mut version));
+        }
+        Ok(version)
+    }
+    
+    pub fn new(&self) -> Result<AudioComponentInstance> {
+        let mut instance: ffi::AudioComponentInstance = unsafe { mem::uninitialized() };
+        unsafe {
+            try_call!(ffi::AudioComponentInstanceNew(self.as_ffi(),
+                                                     &mut instance));
+            Ok(Binding::from_ffi(instance))
         }
     }
 }
@@ -97,6 +136,7 @@ impl<'a> Iterator for AudioComponentIter<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct AudioComponentInstance(ffi::AudioComponentInstance);
 
 impl AudioComponentInstance {}

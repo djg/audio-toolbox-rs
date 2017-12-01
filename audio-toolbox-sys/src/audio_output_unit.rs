@@ -1,3 +1,5 @@
+use {AudioUnit, OSStatus};
+
 extern {
     pub fn AudioOutputUnitStart(ci: AudioUnit) -> OSStatus;
     pub fn AudioOutputUnitStop(ci: AudioUnit) -> OSStatus;

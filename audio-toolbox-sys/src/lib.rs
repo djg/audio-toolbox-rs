@@ -8,10 +8,12 @@ extern crate core_audio_sys;
 mod macros;
 mod au_component;
 mod audio_component;
+mod audio_output_unit;
 mod audio_unit_properties;
 
 pub use au_component::*;
 pub use audio_component::*;
+pub use audio_output_unit::*;
 pub use audio_unit_properties::*;
 
 pub type Boolean = u8;

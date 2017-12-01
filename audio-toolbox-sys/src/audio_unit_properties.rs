@@ -122,7 +122,7 @@ s! {
 
     #[derive(Clone, Copy)]
     struct AURenderCallbackStruct {
-        pub inputProc: AURenderCallback,
+        pub inputProc: Option<AURenderCallback>,
         pub inputProcRefCon: *mut c_void,
     }
 
@@ -403,7 +403,14 @@ cs! {
 e! {
     CF_ENUM(AudioUnitPropertyID) {
         // range  (2000 -> 2999)
-        kAudioOutputUnitProperty_IsRunning		= 2001
+        kAudioOutputUnitProperty_CurrentDevice		= 2000,
+        kAudioOutputUnitProperty_IsRunning		= 2001,
+        kAudioOutputUnitProperty_ChannelMap		= 2002,
+        kAudioOutputUnitProperty_EnableIO		= 2003,
+        kAudioOutputUnitProperty_StartTime		= 2004,
+        kAudioOutputUnitProperty_SetInputCallback	= 2005,
+        kAudioOutputUnitProperty_HasIO			= 2006,
+        kAudioOutputUnitProperty_StartTimestampsAtZero  = 2007
     };
 }
 
@@ -574,21 +581,10 @@ e! {
     };
 }
 
-e! {
-    CF_ENUM(AudioUnitPropertyID) {
-        kAudioOutputUnitProperty_CurrentDevice		= 2000,
-        kAudioOutputUnitProperty_ChannelMap		= 2002,
-        kAudioOutputUnitProperty_EnableIO		= 2003,
-        kAudioOutputUnitProperty_StartTime		= 2004,
-        kAudioOutputUnitProperty_SetInputCallback	= 2005,
-        kAudioOutputUnitProperty_HasIO			= 2006,
-        kAudioOutputUnitProperty_StartTimestampsAtZero  = 2007
-    };
-}
 
 s! {
     #[derive(Clone, Copy)]
-    struct Struct_AudioOutputUnitStartAtTimeParams {
+    struct AudioOutputUnitStartAtTimeParams {
         pub mTimestamp: AudioTimeStamp,
         pub mFlags: u32,
     }
