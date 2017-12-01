@@ -1,0 +1,13 @@
+[package]
+name = "audio-toolbox-sys"
+description = "Native bindings to Audio Toolbox for OS X"
+version = "0.0.1"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+license = "MIT / Apache-2.0"
+build = "build.rs"
+
+[features]
+with-deprecated = []
+
+[dependencies]
+core-audio-sys = { path = "../../core-audio-rs/core-audio-sys" }

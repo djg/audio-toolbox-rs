@@ -1,0 +1,15 @@
+[package]
+name = "audio-toolbox"
+description = "Bindings to Audio Toolbox for OS X"
+version = "0.0.1"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+license = "MIT / Apache-2.0"
+
+[dependencies]
+bitflags = "1.0"
+audio-toolbox-sys = { path = "../audio-toolbox-sys" }
+core-audio = { path = "../../core-audio-rs/core-audio" }
+core-audio-sys = { path = "../../core-audio-rs/core-audio-sys" }
+core-foundation = "0.4"
+ffi-binding = { path = "../../ffi-binding" }
+libc = "0.2"
