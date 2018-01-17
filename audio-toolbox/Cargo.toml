@@ -6,10 +6,9 @@ authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
 license = "MIT / Apache-2.0"
 
 [dependencies]
-bitflags = "1.0"
 audio-toolbox-sys = { path = "../audio-toolbox-sys" }
+bitflags = "1.0"
 core-audio = { path = "../../core-audio-rs/core-audio" }
-core-audio-sys = { path = "../../core-audio-rs/core-audio-sys" }
 core-foundation = "0.4"
-ffi-binding = { path = "../../ffi-binding" }
+foreign-types = "0.3"
 libc = "0.2"

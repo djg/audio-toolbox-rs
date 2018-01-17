@@ -1,0 +1,2 @@
+[workspace]
+members = ["audio-toolbox", "audio-toolbox-sys"]

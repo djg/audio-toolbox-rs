@@ -1,22 +1,24 @@
+extern crate audio_toolbox_sys;
 #[macro_use]
 extern crate bitflags;
-extern crate audio_toolbox_sys;
 extern crate core_audio;
-extern crate core_audio_sys;
 extern crate core_foundation;
 #[macro_use]
-extern crate ffi_binding;
+extern crate foreign_types;
 extern crate libc;
 
-#[macro_use] mod call;
+#[macro_use]
+mod ffi_types;
 
+mod call;
 mod audio_component;
 mod audio_unit;
 mod audio_output_unit;
 mod panic;
-
-pub use audio_toolbox_sys::OSType;
+mod util;
 
 pub use audio_component::*;
-pub use audio_unit::*;
 pub use audio_output_unit::*;
+pub use audio_toolbox_sys::OSType;
+pub use audio_unit::*;
+pub use core_audio::*;

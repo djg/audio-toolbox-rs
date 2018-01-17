@@ -14,12 +14,15 @@ pub fn wrap<T, F: FnOnce() -> T + UnwindSafe>(f: F) -> Option<T> {
     match panic::catch_unwind(f) {
         Ok(ret) => Some(ret),
         Err(e) => {
-            LAST_ERROR.with(move |slot| { *slot.borrow_mut() = Some(e); });
+            LAST_ERROR.with(move |slot| {
+                                *slot.borrow_mut() = Some(e);
+                            });
             None
-        }
+        },
     }
 }
 
+/*
 pub fn check() {
     let err = LAST_ERROR.with(|slot| slot.borrow_mut().take());
     if let Some(err) = err {
@@ -30,3 +33,4 @@ pub fn check() {
 pub fn panicked() -> bool {
     LAST_ERROR.with(|slot| slot.borrow().is_some())
 }
+*/
