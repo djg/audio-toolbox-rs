@@ -1,168 +1,173 @@
 use audio_component::AudioComponentInstance;
-use core_audio_sys::{AudioTimeStamp, Boolean, OSStatus, AudioBufferList};
+use core_audio_sys::{AudioBufferList, AudioTimeStamp, Boolean, OSStatus};
 
 use std::mem;
-use std::os::raw::c_void;
+use std::os::raw::{c_double, c_float, c_void};
 
 //================================================================================================
 pub type AudioUnit = AudioComponentInstance;
 
-e! {
-    CF_ENUM(u32) {
-        kAudioUnitType_Output                           = 0x61756f75,
-        kAudioUnitType_MusicDevice                      = 0x61756d75,
-        kAudioUnitType_MusicEffect                      = 0x61756d66,
-        kAudioUnitType_FormatConverter                  = 0x61756663,
-        kAudioUnitType_Effect                           = 0x61756678,
-        kAudioUnitType_Mixer                            = 0x61756d78,
-        kAudioUnitType_Panner                           = 0x6175706e,
-        kAudioUnitType_Generator                        = 0x6175676e,
-        kAudioUnitType_OfflineEffect                    = 0x61756f6c,
-        kAudioUnitType_MIDIProcessor                    = 0x61756d69,
+pub const kAudioUnitType_Output: u32 = 1635086197;
+pub const kAudioUnitType_MusicDevice: u32 = 1635085685;
+pub const kAudioUnitType_MusicEffect: u32 = 1635085670;
+pub const kAudioUnitType_FormatConverter: u32 = 1635083875;
+pub const kAudioUnitType_Effect: u32 = 1635083896;
+pub const kAudioUnitType_Mixer: u32 = 1635085688;
+pub const kAudioUnitType_Panner: u32 = 1635086446;
+pub const kAudioUnitType_Generator: u32 = 1635084142;
+pub const kAudioUnitType_OfflineEffect: u32 = 1635086188;
+pub const kAudioUnitType_MIDIProcessor: u32 = 1635085673;
 
-        kAudioUnitManufacturer_Apple                    = 0x6170706c,
+pub const kAudioUnitManufacturer_Apple: u32 = 1634758764;
 
-        kAudioUnitSubType_GenericOutput                 = 0x67656e72,
-        kAudioUnitSubType_VoiceProcessingIO             = 0x7670696f,
+pub const kAudioUnitSubType_GenericOutput: u32 = 1734700658;
+pub const kAudioUnitSubType_VoiceProcessingIO: u32 = 1987078511;
 
-        kAudioUnitSubType_HALOutput                     = 0x6168616c,
-        kAudioUnitSubType_DefaultOutput                 = 0x64656620,
-        kAudioUnitSubType_SystemOutput                  = 0x73797320,
+pub const kAudioUnitSubType_HALOutput: u32 = 1634230636;
+pub const kAudioUnitSubType_DefaultOutput: u32 = 1684366880;
+pub const kAudioUnitSubType_SystemOutput: u32 = 1937339168;
 
-        kAudioUnitSubType_DLSSynth                      = 0x646c7320,
-        kAudioUnitSubType_Sampler                       = 0x73616d70,
-        kAudioUnitSubType_MIDISynth                     = 0x6d73796e,
+pub const kAudioUnitSubType_DLSSynth: u32 = 1684828960;
+pub const kAudioUnitSubType_Sampler: u32 = 1935764848;
+pub const kAudioUnitSubType_MIDISynth: u32 = 1836284270;
 
-        kAudioUnitSubType_AUConverter                   = 0x636f6e76,
-        kAudioUnitSubType_Varispeed                     = 0x76617269,
-        kAudioUnitSubType_DeferredRenderer              = 0x64656672,
-        kAudioUnitSubType_Splitter                      = 0x73706c74,
-        kAudioUnitSubType_MultiSplitter                 = 0x6d73706c,
-        kAudioUnitSubType_Merger                        = 0x6d657267,
-        kAudioUnitSubType_NewTimePitch                  = 0x6e757470,
-        kAudioUnitSubType_AUiPodTimeOther               = 0x6970746f,
-        kAudioUnitSubType_RoundTripAAC                  = 0x72616163,
+pub const kAudioUnitSubType_AUConverter: u32 = 1668247158;
+pub const kAudioUnitSubType_Varispeed: u32 = 1986097769;
+pub const kAudioUnitSubType_DeferredRenderer: u32 = 1684366962;
+pub const kAudioUnitSubType_Splitter: u32 = 1936747636;
+pub const kAudioUnitSubType_MultiSplitter: u32 = 1836281964;
+pub const kAudioUnitSubType_Merger: u32 = 1835364967;
+pub const kAudioUnitSubType_NewTimePitch: u32 = 1853191280;
+pub const kAudioUnitSubType_AUiPodTimeOther: u32 = 1768977519;
+pub const kAudioUnitSubType_RoundTripAAC: u32 = 1918984547;
 
-        kAudioUnitSubType_TimePitch                     = 0x746d7074,
+pub const kAudioUnitSubType_TimePitch: u32 = 1953329268;
 
-        kAudioUnitSubType_PeakLimiter                   = 0x6c6d7472,
-        kAudioUnitSubType_DynamicsProcessor             = 0x64636d70,
-        kAudioUnitSubType_LowPassFilter                 = 0x6c706173,
-        kAudioUnitSubType_HighPassFilter                = 0x68706173,
-        kAudioUnitSubType_BandPassFilter                = 0x62706173,
-        kAudioUnitSubType_HighShelfFilter               = 0x68736866,
-        kAudioUnitSubType_LowShelfFilter                = 0x6c736866,
-        kAudioUnitSubType_ParametricEQ                  = 0x706d6571,
-        kAudioUnitSubType_Distortion                    = 0x64697374,
-        kAudioUnitSubType_Delay                         = 0x64656c79,
-        kAudioUnitSubType_SampleDelay                   = 0x73646c79,
-        kAudioUnitSubType_NBandEQ                       = 0x6e626571,
+pub const kAudioUnitSubType_PeakLimiter: u32 = 1819112562;
+pub const kAudioUnitSubType_DynamicsProcessor: u32 = 1684237680;
+pub const kAudioUnitSubType_LowPassFilter: u32 = 1819304307;
+pub const kAudioUnitSubType_HighPassFilter: u32 = 1752195443;
+pub const kAudioUnitSubType_BandPassFilter: u32 = 1651532147;
+pub const kAudioUnitSubType_HighShelfFilter: u32 = 1752393830;
+pub const kAudioUnitSubType_LowShelfFilter: u32 = 1819502694;
+pub const kAudioUnitSubType_ParametricEQ: u32 = 1886217585;
+pub const kAudioUnitSubType_Distortion: u32 = 1684632436;
+pub const kAudioUnitSubType_Delay: u32 = 1684368505;
+pub const kAudioUnitSubType_SampleDelay: u32 = 1935961209;
+pub const kAudioUnitSubType_NBandEQ: u32 = 1851942257;
 
-        kAudioUnitSubType_GraphicEQ                     = 0x67726571,
-        kAudioUnitSubType_MultiBandCompressor           = 0x6d636d70,
-        kAudioUnitSubType_MatrixReverb                  = 0x6d726576,
-        kAudioUnitSubType_Pitch                         = 0x746d7074,
-        kAudioUnitSubType_AUFilter                      = 0x66696c74,
-        kAudioUnitSubType_NetSend                       = 0x6e736e64,
-        kAudioUnitSubType_RogerBeep                     = 0x726f6772,
+pub const kAudioUnitSubType_GraphicEQ: u32 = 1735550321;
+pub const kAudioUnitSubType_MultiBandCompressor: u32 = 1835232624;
+pub const kAudioUnitSubType_MatrixReverb: u32 = 1836213622;
+pub const kAudioUnitSubType_Pitch: u32 = 1953329268;
+pub const kAudioUnitSubType_AUFilter: u32 = 1718185076;
+pub const kAudioUnitSubType_NetSend: u32 = 1853058660;
+pub const kAudioUnitSubType_RogerBeep: u32 = 1919903602;
 
-        kAudioUnitSubType_MultiChannelMixer             = 0x6d636d78,
-        kAudioUnitSubType_MatrixMixer                   = 0x6d786d78,
-        kAudioUnitSubType_SpatialMixer                  = 0x3364656d,
+pub const kAudioUnitSubType_MultiChannelMixer: u32 = 1835232632;
+pub const kAudioUnitSubType_MatrixMixer: u32 = 1836608888;
+pub const kAudioUnitSubType_SpatialMixer: u32 = 862217581;
 
-        kAudioUnitSubType_StereoMixer                   = 0x736d7872,
-	kAudioUnitSubType_3DMixer                       = 0x33646d78,
+pub const kAudioUnitSubType_StereoMixer: u32 = 1936554098;
+#[cfg(feature = "deprecated")]
+pub const kAudioUnitSubType_3DMixer: u32 = 862219640;
 
-        kAudioUnitSubType_SphericalHeadPanner           = 0x73706872,
-        kAudioUnitSubType_VectorPanner                  = 0x76626173,
-        kAudioUnitSubType_SoundFieldPanner              = 0x616d6269,
-        kAudioUnitSubType_HRTFPanner                    = 0x68727466,
+pub const kAudioUnitSubType_SphericalHeadPanner: u32 = 1936746610;
+pub const kAudioUnitSubType_VectorPanner: u32 = 1986158963;
+pub const kAudioUnitSubType_SoundFieldPanner: u32 = 1634558569;
+pub const kAudioUnitSubType_HRTFPanner: u32 = 1752331366;
 
-        kAudioUnitSubType_NetReceive                    = 0x6e726376,
-        kAudioUnitSubType_ScheduledSoundPlayer          = 0x7373706c,
-        kAudioUnitSubType_AudioFilePlayer               = 0x6166706c,
-    };
-}
+pub const kAudioUnitSubType_NetReceive: u32 = 1852990326;
+pub const kAudioUnitSubType_ScheduledSoundPlayer: u32 = 1936945260;
+pub const kAudioUnitSubType_AudioFilePlayer: u32 = 1634103404;
 
 //================================================================================================
-e! {
-    typedef CF_OPTIONS(u32, AudioUnitRenderActionFlags) {
-	kAudioUnitRenderAction_PreRender                = (1 << 2),
-	kAudioUnitRenderAction_PostRender		= (1 << 3),
-	kAudioUnitRenderAction_OutputIsSilence		= (1 << 4),
-	kAudioOfflineUnitRenderAction_Preflight		= (1 << 5),
-	kAudioOfflineUnitRenderAction_Render		= (1 << 6),
-	kAudioOfflineUnitRenderAction_Complete		= (1 << 7),
-	kAudioUnitRenderAction_PostRenderError		= (1 << 8),
-	kAudioUnitRenderAction_DoNotCheckRenderArgs	= (1 << 9)
-    };
-}
 
-e! {
-    CF_ENUM(OSStatus) {
-	kAudioUnitErr_InvalidProperty			= -10879,
-	kAudioUnitErr_InvalidParameter			= -10878,
-	kAudioUnitErr_InvalidElement			= -10877,
-	kAudioUnitErr_NoConnection			= -10876,
-	kAudioUnitErr_FailedInitialization		= -10875,
-	kAudioUnitErr_TooManyFramesToProcess            = -10874,
-	kAudioUnitErr_InvalidFile			= -10871,
-	kAudioUnitErr_UnknownFileType			= -10870,
-	kAudioUnitErr_FileNotSpecified			= -10869,
-	kAudioUnitErr_FormatNotSupported		= -10868,
-	kAudioUnitErr_Uninitialized			= -10867,
-	kAudioUnitErr_InvalidScope			= -10866,
-	kAudioUnitErr_PropertyNotWritable		= -10865,
-	kAudioUnitErr_CannotDoInCurrentContext          = -10863,
-	kAudioUnitErr_InvalidPropertyValue		= -10851,
-	kAudioUnitErr_PropertyNotInUse			= -10850,
-	kAudioUnitErr_Initialized			= -10849,
-	kAudioUnitErr_InvalidOfflineRender		= -10848,
-	kAudioUnitErr_Unauthorized			= -10847,
-        kAudioUnitErr_MIDIOutputBufferFull		= -66753,
-        kAudioComponentErr_InstanceInvalidated          = -66749,
-	kAudioUnitErr_RenderTimeout			= -66745,
-	kAudioUnitErr_ExtensionNotFound			= -66744
-    };
-}
+pub type AudioUnitRenderActionFlags = u32;
+pub const kAudioUnitRenderAction_PreRender: u32 = (1 << 2);
+pub const kAudioUnitRenderAction_PostRender: u32 = (1 << 3);
+pub const kAudioUnitRenderAction_OutputIsSilence: u32 = (1 << 4);
+pub const kAudioOfflineUnitRenderAction_Preflight: u32 = (1 << 5);
+pub const kAudioOfflineUnitRenderAction_Render: u32 = (1 << 6);
+pub const kAudioOfflineUnitRenderAction_Complete: u32 = (1 << 7);
+pub const kAudioUnitRenderAction_PostRenderError: u32 = (1 << 8);
+pub const kAudioUnitRenderAction_DoNotCheckRenderArgs: u32 = (1 << 9);
+
+pub const kAudioUnitErr_InvalidProperty: OSStatus = -10879;
+pub const kAudioUnitErr_InvalidParameter: OSStatus = -10878;
+pub const kAudioUnitErr_InvalidElement: OSStatus = -10877;
+pub const kAudioUnitErr_NoConnection: OSStatus = -10876;
+pub const kAudioUnitErr_FailedInitialization: OSStatus = -10875;
+pub const kAudioUnitErr_TooManyFramesToProcess: OSStatus = -10874;
+pub const kAudioUnitErr_InvalidFile: OSStatus = -10871;
+pub const kAudioUnitErr_UnknownFileType: OSStatus = -10870;
+pub const kAudioUnitErr_FileNotSpecified: OSStatus = -10869;
+pub const kAudioUnitErr_FormatNotSupported: OSStatus = -10868;
+pub const kAudioUnitErr_Uninitialized: OSStatus = -10867;
+pub const kAudioUnitErr_InvalidScope: OSStatus = -10866;
+pub const kAudioUnitErr_PropertyNotWritable: OSStatus = -10865;
+pub const kAudioUnitErr_CannotDoInCurrentContext: OSStatus = -10863;
+pub const kAudioUnitErr_InvalidPropertyValue: OSStatus = -10851;
+pub const kAudioUnitErr_PropertyNotInUse: OSStatus = -10850;
+pub const kAudioUnitErr_Initialized: OSStatus = -10849;
+pub const kAudioUnitErr_InvalidOfflineRender: OSStatus = -10848;
+pub const kAudioUnitErr_Unauthorized: OSStatus = -10847;
+pub const kAudioUnitErr_MIDIOutputBufferFull: OSStatus = -66753;
+pub const kAudioComponentErr_InstanceInvalidated: OSStatus = -66749;
+pub const kAudioUnitErr_RenderTimeout: OSStatus = -66745;
+pub const kAudioUnitErr_ExtensionNotFound: OSStatus = -66744;
 
 pub type AudioUnitPropertyID = u32;
 pub type AudioUnitScope = u32;
 pub type AudioUnitElement = u32;
 pub type AudioUnitParameterID = u32;
-pub type AudioUnitParameterValue = f32;
+pub type AudioUnitParameterValue = c_float;
+pub type AUParameterEventType = u32;
 
-e! {
-    typedef CF_ENUM(u32, AUParameterEventType)
-    {
-	kParameterEvent_Immediate	= 1,
-	kParameterEvent_Ramped		= 2
-    };
+pub const kParameterEvent_Immediate: u32 = 1;
+pub const kParameterEvent_Ramped: u32 = 2;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioUnitParameterEventRamp {
+    pub startBufferOffset: i32,
+    pub durationInFrames: u32,
+    pub startValue: AudioUnitParameterValue,
+    pub endValue: AudioUnitParameterValue,
 }
 
-s! {
-    struct AudioUnitParameterEventRamp {
-        pub startBufferOffset: i32,
-        pub durationInFrames: u32,
-        pub startValue: AudioUnitParameterValue,
-        pub endValue: AudioUnitParameterValue,
+impl Default for AudioUnitParameterEventRamp {
+    fn default() -> AudioUnitParameterEventRamp {
+        unsafe { mem::zeroed() }
     }
 }
 
-s! {
-    struct AudioUnitParameterEventImmediate {
-        pub bufferOffset: u32,
-        pub value: AudioUnitParameterValue,
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioUnitParameterEventImmediate {
+    pub bufferOffset: u32,
+    pub value: AudioUnitParameterValue,
+}
+
+impl Default for AudioUnitParameterEventImmediate {
+    fn default() -> AudioUnitParameterEventImmediate {
+        unsafe { mem::zeroed() }
     }
 }
 
-s! {
-    struct AudioUnitParameterEvent {
-        pub scope: AudioUnitScope,
-        pub element: AudioUnitElement,
-        pub parameter: AudioUnitParameterID,
-        pub eventType: AUParameterEventType,
-  	    _eventValues: [u32;4],
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioUnitParameterEvent {
+    pub scope: AudioUnitScope,
+    pub element: AudioUnitElement,
+    pub parameter: AudioUnitParameterID,
+    pub eventType: AUParameterEventType,
+    _eventValues: [u32; 4],
+}
+
+impl Default for AudioUnitParameterEvent {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
     }
 }
 
@@ -175,23 +180,33 @@ impl AudioUnitParameterEvent {
     }
 }
 
-s! {
-    struct AudioUnitParameter
-    {
-	pub mAudioUnit: AudioUnit,
-	pub mParameterID: AudioUnitParameterID,
-	pub mScope: AudioUnitScope,
-	pub mElement: AudioUnitElement,
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioUnitParameter {
+    pub mAudioUnit: AudioUnit,
+    pub mParameterID: AudioUnitParameterID,
+    pub mScope: AudioUnitScope,
+    pub mElement: AudioUnitElement,
+}
+
+impl Default for AudioUnitParameter {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
     }
 }
 
-s! {
-    struct AudioUnitProperty
-    {
-	pub mAudioUnit: AudioUnit,
-	pub mPropertyID: AudioUnitPropertyID,
-	pub mScope: AudioUnitScope,
-	pub mElement: AudioUnitElement,
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct AudioUnitProperty {
+    pub mAudioUnit: AudioUnit,
+    pub mPropertyID: AudioUnitPropertyID,
+    pub mScope: AudioUnitScope,
+    pub mElement: AudioUnitElement,
+}
+
+impl Default for AudioUnitProperty {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
     }
 }
 
@@ -201,7 +216,7 @@ pub type AURenderCallback = extern fn(
     inTimeStamp: *const AudioTimeStamp,
     inBusNumber: u32,
     inNumberFrames: u32,
-    ioData: *mut AudioBufferList
+    ioData: *mut AudioBufferList,
 ) -> OSStatus;
 
 pub type AudioUnitPropertyListenerProc = extern fn(
@@ -209,19 +224,20 @@ pub type AudioUnitPropertyListenerProc = extern fn(
     inUnit: AudioUnit,
     inID: AudioUnitPropertyID,
     inScope: AudioUnitScope,
-    inElement: AudioUnitElement
+    inElement: AudioUnitElement,
 );
 
-pub type AUInputSamplesInOutputCallback = extern fn(
-    inRefCon: *mut c_void,
-    inOutputTimeStamp: *const AudioTimeStamp,
-    inInputSample: f64,
-    inNumberInputSamples: f64
-);
+pub type AUInputSamplesInOutputCallback =
+    extern fn(
+        inRefCon: *mut c_void,
+        inOutputTimeStamp: *const AudioTimeStamp,
+        inInputSample: c_double,
+        inNumberInputSamples: c_double,
+    );
 
 //================================================================================================
 
-extern "C" {
+extern {
     pub fn AudioUnitInitialize(inUnit: AudioUnit) -> OSStatus;
     pub fn AudioUnitUninitialize(inUnit: AudioUnit) -> OSStatus;
     pub fn AudioUnitGetPropertyInfo(
@@ -336,29 +352,26 @@ AudioUnitExtensionCopyComponentList(CFStringRef extensionIdentifier)
 #endif
 */
 
-e! {
-    enum {
-        kAudioUnitRange							= 0x0000,	// range of selectors for audio units
-	kAudioUnitInitializeSelect				= 0x0001,
-	kAudioUnitUninitializeSelect			= 0x0002,
-	kAudioUnitGetPropertyInfoSelect			= 0x0003,
-	kAudioUnitGetPropertySelect				= 0x0004,
-	kAudioUnitSetPropertySelect				= 0x0005,
-	kAudioUnitAddPropertyListenerSelect		= 0x000A,
-	kAudioUnitRemovePropertyListenerSelect	= 0x000B,
-	kAudioUnitRemovePropertyListenerWithUserDataSelect = 0x0012,
-	kAudioUnitAddRenderNotifySelect			= 0x000F,
-	kAudioUnitRemoveRenderNotifySelect		= 0x0010,
-	kAudioUnitGetParameterSelect			= 0x0006,
-	kAudioUnitSetParameterSelect			= 0x0007,
-	kAudioUnitScheduleParametersSelect		= 0x0011,
-	kAudioUnitRenderSelect					= 0x000E,
-	kAudioUnitResetSelect					= 0x0009,
-	kAudioUnitComplexRenderSelect			= 0x0013,
-	kAudioUnitProcessSelect					= 0x0014,
-	kAudioUnitProcessMultipleSelect			= 0x0015
-    };
-}
+// range of selectors for audio units
+pub const kAudioUnitRange: u32 = 0;
+pub const kAudioUnitInitializeSelect: u32 = 1;
+pub const kAudioUnitUninitializeSelect: u32 = 2;
+pub const kAudioUnitGetPropertyInfoSelect: u32 = 3;
+pub const kAudioUnitGetPropertySelect: u32 = 4;
+pub const kAudioUnitSetPropertySelect: u32 = 5;
+pub const kAudioUnitAddPropertyListenerSelect: u32 = 10;
+pub const kAudioUnitRemovePropertyListenerSelect: u32 = 11;
+pub const kAudioUnitRemovePropertyListenerWithUserDataSelect: u32 = 18;
+pub const kAudioUnitAddRenderNotifySelect: u32 = 15;
+pub const kAudioUnitRemoveRenderNotifySelect: u32 = 16;
+pub const kAudioUnitGetParameterSelect: u32 = 6;
+pub const kAudioUnitSetParameterSelect: u32 = 7;
+pub const kAudioUnitScheduleParametersSelect: u32 = 17;
+pub const kAudioUnitRenderSelect: u32 = 14;
+pub const kAudioUnitResetSelect: u32 = 9;
+pub const kAudioUnitComplexRenderSelect: u32 = 19;
+pub const kAudioUnitProcessSelect: u32 = 20;
+pub const kAudioUnitProcessMultipleSelect: u32 = 21;
 
 //================================================================================================
 
@@ -367,7 +380,7 @@ pub type AudioUnitGetParameterProc = extern fn(
     inID: AudioUnitParameterID,
     inScope: AudioUnitScope,
     inElement: AudioUnitElement,
-    outValue: *mut AudioUnitParameterValue
+    outValue: *mut AudioUnitParameterValue,
 ) -> OSStatus;
 
 pub type AudioUnitSetParameterProc = extern fn(
@@ -376,21 +389,15 @@ pub type AudioUnitSetParameterProc = extern fn(
     inScope: AudioUnitScope,
     inElement: AudioUnitElement,
     inValue: AudioUnitParameterValue,
-    inBufferOffsetInFrames: u32
+    inBufferOffsetInFrames: u32,
 ) -> OSStatus;
 
 //================================================================================================
 
-cfg_if! {
-    if #[cfg(feature = "with-deprecated")] {
-        e!{
-            CF_ENUM(OSStatus) {
-	        kAudioUnitErr_IllegalInstrument	        = -10873,
-	        kAudioUnitErr_InstrumentTypeNotFound	= -10872,
-            };
-        }
-    } else {}
-}
+#[cfg(feature = "deprecated")]
+pub const kAudioUnitErr_IllegalInstrument: OSStatus = -10873;
+#[cfg(feature = "deprecated")]
+pub const kAudioUnitErr_InstrumentTypeNotFound: OSStatus = -10872;
 
 /*
 #if !TARGET_RT_64_BIT && !TARGET_OS_IPHONE

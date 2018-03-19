@@ -4,8 +4,6 @@
 
 extern crate core_audio_sys;
 
-#[macro_use]
-mod macros;
 mod au_component;
 mod audio_component;
 mod audio_output_unit;

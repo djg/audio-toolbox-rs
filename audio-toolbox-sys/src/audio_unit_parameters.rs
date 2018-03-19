@@ -1,7 +1,3 @@
 use AudioUnitParameterID;
 
-e! {
-    CF_ENUM(AudioUnitParameterID) {
-	kHALOutputParam_Volume 		= 14 
-    };
-}
+pub const kHALOutputParam_Volume: AudioUnitParameterID = 14;
