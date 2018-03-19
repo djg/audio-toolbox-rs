@@ -51,7 +51,7 @@ impl AudioOutputUnit {
             ffi::kAudioUnitManufacturer_Apple,
         );
         match AudioComponent::iter(desc.as_ref()).find(|c| f(c)) {
-            Some(c) => c.new().map(|ci| Some(ci.into())),
+            Some(c) => c.new_instance().map(|ci| Some(ci.into())),
             None => Ok(None),
         }
     }

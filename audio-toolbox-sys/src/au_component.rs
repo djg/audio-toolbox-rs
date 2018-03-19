@@ -173,10 +173,10 @@ impl Default for AudioUnitParameterEvent {
 
 impl AudioUnitParameterEvent {
     pub unsafe fn ramp(&mut self) -> *mut AudioUnitParameterEventRamp {
-        mem::transmute(&self._eventValues)
+        &self._eventValues as *const [u32; 4] as *mut AudioUnitParameterEventRamp
     }
     pub unsafe fn immediate(&mut self) -> *mut AudioUnitParameterEventImmediate {
-        mem::transmute(&self._eventValues)
+        &self._eventValues as *const [u32; 4] as *mut AudioUnitParameterEventImmediate
     }
 }
 

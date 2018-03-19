@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
+#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
 extern crate core_audio_sys;
 

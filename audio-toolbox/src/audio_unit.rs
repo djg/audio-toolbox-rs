@@ -29,15 +29,15 @@ pub enum AudioUnitManufacturer {
 pub enum AudioUnitSubType {
     GenericOutput,
     VoiceProcessingIO,
-
+    //
     HALOutput,
     DefaultOutput,
     SystemOutput,
-
+    //
     DLSSynth,
     Sampler,
     MIDISynth,
-
+    //
     AUConverter,
     Varispeed,
     DeferredRenderer,
@@ -47,9 +47,9 @@ pub enum AudioUnitSubType {
     NewTimePitch,
     AUiPodTimeOther,
     RoundTripAAC,
-
+    //
     TimePitch,
-
+    //
     PeakLimiter,
     DynamicsProcessor,
     LowPassFilter,
@@ -62,7 +62,7 @@ pub enum AudioUnitSubType {
     Delay,
     SampleDelay,
     NBandEQ,
-
+    //
     GraphicEQ,
     MultiBandCompressor,
     MatrixReverb,
@@ -70,19 +70,19 @@ pub enum AudioUnitSubType {
     AUFilter,
     NetSend,
     RogerBeep,
-
+    //
     MultiChannelMixer,
     MatrixMixer,
     SpatialMixer,
-
+    //
     StereoMixer,
-    _3DMixer,
-
+    #[cfg(feature = "deprecate")] _3DMixer,
+    //
     SphericalHeadPanner,
     VectorPanner,
     SoundFieldPanner,
     HRTFPanner,
-
+    //
     NetReceive,
     ScheduledSoundPlayer,
     AudioFilePlayer,
@@ -197,6 +197,8 @@ pub type AudioUnitRenderCB =
 struct CallbackThunk<T: ?Sized> {
     cb: Box<T>,
 }
+
+#[derive(Clone, Copy, Debug)]
 pub struct CallbackHandle<T: ?Sized> {
     thunk: *mut CallbackThunk<T>,
 }
@@ -392,7 +394,7 @@ impl AudioUnitRef {
                 thunk as *mut _,
             ))?;
         }
-        Ok(CallbackHandle { thunk: thunk })
+        Ok(CallbackHandle { thunk })
     }
 
     pub unsafe fn remove_render_notify(
@@ -632,7 +634,7 @@ pub extern fn audio_unit_render_cb(
         let mut data = AudioBufferListRef::from_ptr(data);
         callback(
             &mut new_action,
-            &time_stamp,
+            time_stamp,
             bus_number,
             number_frames,
             &mut data,

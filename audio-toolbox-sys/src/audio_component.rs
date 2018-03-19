@@ -105,8 +105,6 @@ pub const kAudioComponentValidationResult_TimedOut: u32 = 3;
 pub const kAudioComponentValidationResult_UnauthorizedError_Open: u32 = 4;
 pub const kAudioComponentValidationResult_UnauthorizedError_Init: u32 = 5;
 
-pub const kAudioComponentConfigurationInfo_ValidationResult: &'static str =
-    "ValidationResult";
-pub const kAudioComponentValidationParameter_TimeOut: &'static str = "TimeOut";
-pub const kAudioComponentValidationParameter_ForceValidation: &'static str =
-    "ForceValidation";
+pub const kAudioComponentConfigurationInfo_ValidationResult: &str = "ValidationResult";
+pub const kAudioComponentValidationParameter_TimeOut: &str = "TimeOut";
+pub const kAudioComponentValidationParameter_ForceValidation: &str = "ForceValidation";

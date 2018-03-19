@@ -71,23 +71,23 @@ pub const kAudioUnitProperty_AUHostIdentifier: AudioUnitPropertyID = 46;
 pub const kAudioUnitProperty_MIDIOutputCallbackInfo: AudioUnitPropertyID = 47;
 pub const kAudioUnitProperty_MIDIOutputCallback: AudioUnitPropertyID = 48;
 
-pub const kAUPresetVersionKey: &'static str = "version";
-pub const kAUPresetTypeKey: &'static str = "type";
-pub const kAUPresetSubtypeKey: &'static str = "subtype";
-pub const kAUPresetManufacturerKey: &'static str = "manufacturer";
-pub const kAUPresetDataKey: &'static str = "data";
-pub const kAUPresetNameKey: &'static str = "name";
-pub const kAUPresetRenderQualityKey: &'static str = "render-quality";
-pub const kAUPresetCPULoadKey: &'static str = "cpu-load";
-pub const kAUPresetElementNameKey: &'static str = "element-name";
-pub const kAUPresetExternalFileRefs: &'static str = "file-references";
+pub const kAUPresetVersionKey: &str = "version";
+pub const kAUPresetTypeKey: &str = "type";
+pub const kAUPresetSubtypeKey: &str = "subtype";
+pub const kAUPresetManufacturerKey: &str = "manufacturer";
+pub const kAUPresetDataKey: &str = "data";
+pub const kAUPresetNameKey: &str = "name";
+pub const kAUPresetRenderQualityKey: &str = "render-quality";
+pub const kAUPresetCPULoadKey: &str = "cpu-load";
+pub const kAUPresetElementNameKey: &str = "element-name";
+pub const kAUPresetExternalFileRefs: &str = "file-references";
 
-pub const kAUPresetVSTDataKey: &'static str = "vstdata";
-pub const kAUPresetVSTPresetKey: &'static str = "vstpreset";
+pub const kAUPresetVSTDataKey: &str = "vstdata";
+pub const kAUPresetVSTPresetKey: &str = "vstpreset";
 
-pub const kAUPresetMASDataKey: &'static str = "masdata";
+pub const kAUPresetMASDataKey: &str = "masdata";
 
-pub const kAUPresetPartKey: &'static str = "part";
+pub const kAUPresetPartKey: &str = "part";
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -453,14 +453,14 @@ impl Default for AudioUnitParameterValueFromString {
     }
 }
 
-pub const kAudioUnitConfigurationInfo_HasCustomView: &'static str = "HasCustomView";
-pub const kAudioUnitConfigurationInfo_ChannelConfigurations: &'static str =
+pub const kAudioUnitConfigurationInfo_HasCustomView: &str = "HasCustomView";
+pub const kAudioUnitConfigurationInfo_ChannelConfigurations: &str =
     "ChannelConfigurations";
-pub const kAudioUnitConfigurationInfo_InitialInputs: &'static str = "InitialInputs";
-pub const kAudioUnitConfigurationInfo_InitialOutputs: &'static str = "InitialOutputs";
-pub const kAudioUnitConfigurationInfo_IconURL: &'static str = "IconURL";
-pub const kAudioUnitConfigurationInfo_BusCountWritable: &'static str = "BusCountWritable";
-pub const kAudioUnitConfigurationInfo_SupportedChannelLayoutTags: &'static str =
+pub const kAudioUnitConfigurationInfo_InitialInputs: &str = "InitialInputs";
+pub const kAudioUnitConfigurationInfo_InitialOutputs: &str = "InitialOutputs";
+pub const kAudioUnitConfigurationInfo_IconURL: &str = "IconURL";
+pub const kAudioUnitConfigurationInfo_BusCountWritable: &str = "BusCountWritable";
+pub const kAudioUnitConfigurationInfo_SupportedChannelLayoutTags: &str =
     "SupportedChannelLayoutTags";
 
 // range  (2000 -> 2999)
@@ -479,7 +479,7 @@ pub const kAudioUnitProperty_RemoveParameterMIDIMapping: AudioUnitPropertyID = 4
 pub const kAudioUnitProperty_HotMapParameterMIDIMapping: AudioUnitPropertyID = 44;
 
 pub type AUParameterMIDIMappingFlags = u32;
-pub const kAUParameterMIDIMapping_AnyChannelFlag: u32 = (1 << 0);
+pub const kAUParameterMIDIMapping_AnyChannelFlag: u32 = 1;
 pub const kAUParameterMIDIMapping_AnyNoteFlag: u32 = (1 << 1);
 pub const kAUParameterMIDIMapping_SubRange: u32 = (1 << 2);
 pub const kAUParameterMIDIMapping_Toggle: u32 = (1 << 3);
@@ -731,7 +731,7 @@ impl Default for MixerDistanceParams {
 }
 
 pub type AUSpatialMixerRenderingFlags = u32;
-pub const kSpatialMixerRenderingFlags_InterAuralDelay: u32 = (1 << 0);
+pub const kSpatialMixerRenderingFlags_InterAuralDelay: u32 = 1;
 pub const kSpatialMixerRenderingFlags_DistanceAttenuation: u32 = (1 << 2);
 
 // Deprecated in 10.11
@@ -749,7 +749,7 @@ pub const kAudioUnitProperty_3DMixerDistanceAtten: AudioUnitPropertyID = 3004;
 pub const kAudioUnitProperty_ReverbPreset: AudioUnitPropertyID = 3012;
 
 pub type AU3DMixerRenderingFlags = u32;
-pub const k3DMixerRenderingFlags_InterAuralDelay: u32 = (1 << 0);
+pub const k3DMixerRenderingFlags_InterAuralDelay: u32 = 1;
 pub const k3DMixerRenderingFlags_DopplerShift: u32 = (1 << 1);
 pub const k3DMixerRenderingFlags_DistanceAttenuation: u32 = (1 << 2);
 pub const k3DMixerRenderingFlags_DistanceFilter: u32 = (1 << 3);
@@ -909,7 +909,7 @@ pub const kAUNetSendPresetFormat_AAC_LD_32kbpspc: AudioUnitPropertyID = 17;
 pub const kAUNetSendNumPresetFormats: AudioUnitPropertyID = 18;
 
 // GENERIC
-pub const kAudioUnitParameterFlag_Global: u32 = (1 << 0);
+pub const kAudioUnitParameterFlag_Global: u32 = 1;
 pub const kAudioUnitParameterFlag_Input: u32 = (1 << 1);
 pub const kAudioUnitParameterFlag_Output: u32 = (1 << 2);
 pub const kAudioUnitParameterFlag_Group: u32 = (1 << 3);

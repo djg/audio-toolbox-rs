@@ -154,11 +154,11 @@ impl AudioComponent {
     pub fn iter(desc: &AudioComponentDescriptionRef) -> AudioComponentIter {
         AudioComponentIter {
             comp: ptr::null_mut(),
-            desc: desc,
+            desc,
         }
     }
 
-    pub fn new(&self) -> Result<AudioComponentInstance> {
+    pub fn new_instance(&self) -> Result<AudioComponentInstance> {
         let mut ptr: ffi::AudioComponentInstance = ptr::null_mut();
         unsafe {
             call::cvt_r(ffi::AudioComponentInstanceNew(self.0, &mut ptr))?;
