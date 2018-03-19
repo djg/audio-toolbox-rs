@@ -3,8 +3,6 @@ extern crate audio_toolbox_sys;
 extern crate bitflags;
 extern crate core_audio;
 extern crate core_foundation;
-#[macro_use]
-extern crate foreign_types;
 extern crate libc;
 
 #[macro_use]

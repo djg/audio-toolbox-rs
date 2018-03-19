@@ -1,58 +1,80 @@
-/// A macro to define a wrapper around a POD FFI type that lives on
-/// the stack.
-macro_rules! ffi_type_stack {
-    ($(#[$impl_attr:meta])*
-     type CType = $ctype:ty;
-     $(#[$owned_attr:meta])*
-     pub struct $owned:ident;
-     $(#[$borrowed_attr:meta])*
-     pub struct $borrowed:ident;
+// Copyright © 2017-2018 Daniel Glastonbury <dan.glastonbury@gmail.com>
+
+use std::cell::UnsafeCell;
+pub struct Opaque(UnsafeCell<()>);
+/// Generate a newtype wrapper `$owned` and reference wrapper
+/// `$borrowed` around a POD FFI type that lives on the heap.
+macro_rules! ffi_type_heap {
+    (
+        $(#[$impl_attr:meta])*
+        type CType = $ctype:ty;
+        $(fn drop = $drop:expr;)*
+        $(fn clone = $clone:expr;)*
+        $(#[$owned_attr:meta])*
+        pub struct $owned:ident;
+        $(#[$borrowed_attr:meta])*
+        pub struct $borrowed:ident;
     ) => {
         $(#[$owned_attr])*
-        pub struct $owned($ctype);
+        pub struct $owned(*mut $ctype);
 
-        $(#[$impl_attr])*
-        impl ::foreign_types::ForeignType for $owned {
-            type CType = $ctype;
-            type Ref = $borrowed;
-
-            unsafe fn from_ptr(ptr: *mut $ctype) -> $owned {
-                $owned(*ptr)
+        impl $owned {
+            #[inline]
+            pub unsafe fn from_ptr(ptr: *mut $ctype) -> $owned {
+                $owned(ptr)
             }
 
-            fn as_ptr(&self) -> *mut Self::CType {
-                self as *const $owned as *mut _
+            #[inline]
+            pub fn as_ptr(&self) -> *mut $ctype {
+                self.0
             }
         }
 
-        impl Clone for $owned {
-            fn clone(&self) -> $owned {
-                $owned(self.0.clone())
-            }
-        }
-
-        impl ::std::borrow::ToOwned for $borrowed {
-            type Owned = $owned;
-            fn to_owned(&self) -> $owned {
-                unsafe {
-                    ::foreign_types::ForeignType::from_ptr(self.as_ptr())
+        $(
+            impl Drop for $owned {
+                #[inline]
+                fn drop(&mut self) {
+                    unsafe { $drop(self.0) }
                 }
             }
-        }
+        )*
+
+        $(
+            impl Clone for $owned {
+                #[inline]
+                fn clone(&self) -> $owned {
+                    unsafe {
+                        let handle: *mut $ctype = $clone(self.0);
+                        $owned::from_ptr(handle)
+                    }
+                }
+            }
+
+            impl ::std::borrow::ToOwned for $borrowed {
+                type Owned = $owned;
+                #[inline]
+                fn to_owned(&self) -> $owned {
+                    unsafe {
+                        let handle: *mut $ctype = $clone(self.as_ptr());
+                        $owned::from_ptr(handle)
+                    }
+                }
+            }
+        )*
 
         impl ::std::ops::Deref for $owned {
             type Target = $borrowed;
 
             #[inline]
             fn deref(&self) -> &$borrowed {
-                unsafe { ::foreign_types::ForeignTypeRef::from_ptr(self.as_ptr()) }
+                unsafe { $borrowed::from_ptr(self.0) }
             }
         }
 
         impl ::std::ops::DerefMut for $owned {
             #[inline]
             fn deref_mut(&mut self) -> &mut $borrowed {
-                unsafe { ::foreign_types::ForeignTypeRef::from_ptr_mut(self.as_ptr()) }
+                unsafe { $borrowed::from_ptr_mut(self.0) }
             }
         }
 
@@ -71,17 +93,135 @@ macro_rules! ffi_type_stack {
         }
 
         $(#[$borrowed_attr])*
-        pub struct $borrowed(::foreign_types::Opaque);
+        pub struct $borrowed($crate::ffi_types::Opaque);
 
-        $(#[$impl_attr])*
-        impl ::foreign_types::ForeignTypeRef for $borrowed {
-            type CType = $ctype;
+        impl $borrowed {
+            #[inline]
+            pub unsafe fn from_ptr<'a>(ptr: *mut $ctype) -> &'a Self {
+                &*(ptr as *mut _)
+            }
+
+            #[inline]
+            pub unsafe fn from_ptr_mut<'a>(ptr: *mut $ctype) -> &'a mut Self {
+                &mut *(ptr as *mut _)
+            }
+
+            #[inline]
+            pub fn as_ptr(&self) -> *mut $ctype {
+                self as *const _ as *mut _
+            }
         }
 
         impl ::std::fmt::Debug for $borrowed {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                let r: &$ctype = unsafe { &*self.as_ptr() };
-                r.fmt(f)
+                let ptr = self as *const $borrowed as usize;
+                f.debug_tuple(stringify!($borrowed))
+                    .field(&ptr)
+                    .finish()
+            }
+        }
+    }
+}
+
+/// Generate a newtype wrapper `$owned` and reference wrapper
+/// `$borrowed` around a POD FFI type that lives on the stack.
+macro_rules! ffi_type_stack {
+    ($(#[$impl_attr:meta])*
+     type CType = $ctype:ty;
+     $(#[$owned_attr:meta])*
+     pub struct $owned:ident;
+     $(#[$borrowed_attr:meta])*
+     pub struct $borrowed:ident;
+    ) => {
+        $(#[$owned_attr])*
+        pub struct $owned($ctype);
+
+        impl $owned {
+            pub fn as_ptr(&self) -> *mut $ctype {
+                &self.0 as *const $ctype as *mut $ctype
+            }
+        }
+
+        impl Default for $owned {
+            fn default() -> $owned {
+                $owned(Default::default())
+            }
+        }
+
+        impl From<$ctype> for $owned {
+            fn from(x: $ctype) -> $owned {
+                $owned(x)
+            }
+        }
+
+        impl ::std::borrow::ToOwned for $borrowed {
+            type Owned = $owned;
+            #[inline]
+            fn to_owned(&self) -> $owned {
+                unsafe {
+                    $owned::from(*self.as_ptr())
+                }
+            }
+        }
+
+        impl ::std::ops::Deref for $owned {
+            type Target = $borrowed;
+
+            #[inline]
+            fn deref(&self) -> &$borrowed {
+                let ptr = &self.0 as *const $ctype as *mut $ctype;
+                unsafe { $borrowed::from_ptr(ptr) }
+            }
+        }
+
+        impl ::std::ops::DerefMut for $owned {
+            #[inline]
+            fn deref_mut(&mut self) -> &mut $borrowed {
+                let ptr = &self.0 as *const $ctype as *mut $ctype;
+                unsafe { $borrowed::from_ptr_mut(ptr) }
+            }
+        }
+
+        impl ::std::borrow::Borrow<$borrowed> for $owned {
+            #[inline]
+            fn borrow(&self) -> &$borrowed {
+                &**self
+            }
+        }
+
+        impl ::std::convert::AsRef<$borrowed> for $owned {
+            #[inline]
+            fn as_ref(&self) -> &$borrowed {
+                &**self
+            }
+        }
+
+        $(#[$borrowed_attr])*
+        pub struct $borrowed($crate::ffi_types::Opaque);
+
+        impl $borrowed {
+            #[inline]
+            pub unsafe fn from_ptr<'a>(ptr: *mut $ctype) -> &'a Self {
+                &*(ptr as *mut _)
+            }
+
+            #[inline]
+            pub unsafe fn from_ptr_mut<'a>(ptr: *mut $ctype) -> &'a mut Self {
+                &mut *(ptr as *mut _)
+            }
+
+            #[inline]
+            pub fn as_ptr(&self) -> *mut $ctype {
+                self as *const _ as *mut _
+            }
+        }
+
+        impl ::std::fmt::Debug for $borrowed {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                let ptr = self as *const $borrowed as usize;
+                f.debug_tuple(stringify!($borrowed))
+                    .field(&ptr)
+                    .finish()
             }
         }
     }

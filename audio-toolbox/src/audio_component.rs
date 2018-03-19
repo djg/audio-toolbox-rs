@@ -2,7 +2,6 @@ use {AudioUnitManufacturer, AudioUnitSubType, AudioUnitType};
 use audio_toolbox_sys as ffi;
 use call;
 use core_audio::Result;
-use foreign_types::{ForeignType, ForeignTypeRef};
 use std::ptr;
 use util::component_instance_dispose;
 
@@ -28,25 +27,24 @@ ffi_type_stack! {
 }
 
 impl AudioComponentDescription {
-    pub fn new(kind: ffi::OSType,
-               sub_kind: ffi::OSType,
-               manufacturer: ffi::OSType)
-               -> Self
-    {
+    pub fn new(
+        kind: ffi::OSType,
+        sub_kind: ffi::OSType,
+        manufacturer: ffi::OSType,
+    ) -> Self {
         AudioComponentDescription(ffi::AudioComponentDescription {
             componentType: kind,
             componentSubType: sub_kind,
-            componentManufacturer:
-            manufacturer,
-            ..Default::default() })
+            componentManufacturer: manufacturer,
+            ..Default::default()
+        })
     }
 }
 
 impl AudioComponentDescriptionRef {
     pub fn kind(&self) -> AudioUnitType {
         use AudioUnitType::*;
-        let desc: &ffi::AudioComponentDescription =
-            unsafe { &*self.as_ptr() };
+        let desc: &ffi::AudioComponentDescription = unsafe { &*self.as_ptr() };
         match desc.componentType {
             ffi::kAudioUnitType_Output => Output,
             ffi::kAudioUnitType_MusicDevice => MusicDevice,
@@ -64,8 +62,7 @@ impl AudioComponentDescriptionRef {
 
     pub fn sub_kind(&self) -> AudioUnitSubType {
         use AudioUnitSubType::*;
-        let desc: &ffi::AudioComponentDescription =
-            unsafe { &*self.as_ptr() };
+        let desc: &ffi::AudioComponentDescription = unsafe { &*self.as_ptr() };
         match desc.componentSubType {
             ffi::kAudioUnitSubType_GenericOutput => GenericOutput,
             ffi::kAudioUnitSubType_VoiceProcessingIO => VoiceProcessingIO,
@@ -116,6 +113,7 @@ impl AudioComponentDescriptionRef {
             ffi::kAudioUnitSubType_SpatialMixer => SpatialMixer,
 
             ffi::kAudioUnitSubType_StereoMixer => StereoMixer,
+            #[cfg(feature = "deprecated")]
             ffi::kAudioUnitSubType_3DMixer => _3DMixer,
 
             ffi::kAudioUnitSubType_SphericalHeadPanner => SphericalHeadPanner,
@@ -132,8 +130,7 @@ impl AudioComponentDescriptionRef {
 
     pub fn manufacturer(&self) -> AudioUnitManufacturer {
         use AudioUnitManufacturer::*;
-        let desc: &ffi::AudioComponentDescription =
-            unsafe { &*self.as_ptr() };
+        let desc: &ffi::AudioComponentDescription = unsafe { &*self.as_ptr() };
         match desc.componentManufacturer {
             ffi::kAudioUnitManufacturer_Apple => Apple,
             m => panic!("Unknown AudioUnitManufacture {:?}", format_ostype(m)),
@@ -141,8 +138,7 @@ impl AudioComponentDescriptionRef {
     }
 
     pub fn flags(&self) -> u32 {
-        let desc: &ffi::AudioComponentDescription =
-            unsafe { &*self.as_ptr() };
+        let desc: &ffi::AudioComponentDescription = unsafe { &*self.as_ptr() };
         desc.componentFlags
     }
 
@@ -156,15 +152,17 @@ pub struct AudioComponent(ffi::AudioComponent);
 
 impl AudioComponent {
     pub fn iter(desc: &AudioComponentDescriptionRef) -> AudioComponentIter {
-        AudioComponentIter { comp: ptr::null_mut(),
-                             desc: desc, }
+        AudioComponentIter {
+            comp: ptr::null_mut(),
+            desc: desc,
+        }
     }
 
     pub fn new(&self) -> Result<AudioComponentInstance> {
         let mut ptr: ffi::AudioComponentInstance = ptr::null_mut();
         unsafe {
             call::cvt_r(ffi::AudioComponentInstanceNew(self.0, &mut ptr))?;
-            Ok(ForeignType::from_ptr(ptr))
+            Ok(AudioComponentInstance::from_ptr(ptr))
         }
     }
 
@@ -172,7 +170,7 @@ impl AudioComponent {
         let mut desc = ffi::AudioComponentDescription::default();
         unsafe {
             call::cvt_r(ffi::AudioComponentGetDescription(self.0, &mut desc))?;
-            Ok(ForeignType::from_ptr(&mut desc))
+            Ok(AudioComponentDescription::from(desc))
         }
     }
 
@@ -186,11 +184,15 @@ impl AudioComponent {
 }
 
 impl ::std::convert::From<ffi::AudioComponent> for AudioComponent {
-    fn from(ffi: ffi::AudioComponent) -> Self { AudioComponent(ffi) }
+    fn from(ffi: ffi::AudioComponent) -> Self {
+        AudioComponent(ffi)
+    }
 }
 
 impl ::std::convert::Into<ffi::AudioComponent> for AudioComponent {
-    fn into(self) -> ffi::AudioComponent { self.0 }
+    fn into(self) -> ffi::AudioComponent {
+        self.0
+    }
 }
 
 #[derive(Debug)]
@@ -215,7 +217,7 @@ impl<'a> Iterator for AudioComponentIter<'a> {
 
 //==============================================================================
 // Audio Component Instance
-foreign_type! {
+ffi_type_heap! {
     type CType = ffi::ComponentInstanceRecord;
     fn drop = component_instance_dispose;
     #[derive(Debug)]

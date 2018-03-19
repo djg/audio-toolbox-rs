@@ -10,5 +10,4 @@ audio-toolbox-sys = { path = "../audio-toolbox-sys" }
 bitflags = "1.0"
 core-audio = { path = "../../core-audio-rs/core-audio" }
 core-foundation = "0.4"
-foreign-types = "0.3"
 libc = "0.2"

@@ -4,7 +4,6 @@ use {AudioComponent, AudioComponentDescription, AudioComponentInstance, AudioDev
 use AudioUnitScope::{Global, Input};
 use audio_toolbox_sys as ffi;
 use call;
-use foreign_types::{ForeignType, ForeignTypeRef};
 use std::{mem, ops};
 use util::component_instance_dispose;
 
@@ -17,7 +16,7 @@ pub enum AudioOutputUnitSubType {
     System,
 }
 
-foreign_type! {
+ffi_type_heap! {
     type CType = ffi::ComponentInstanceRecord;
     fn drop = component_instance_dispose;
     #[derive(Debug)]
@@ -43,10 +42,14 @@ impl AudioOutputUnit {
     pub const VOLUME: AudioUnitParameter = ffi::kHALOutputParam_Volume;
 
     pub fn new_instance<F>(f: F) -> Result<Option<AudioOutputUnit>>
-        where F: Fn(&AudioComponent) -> bool {
-        let desc = AudioComponentDescription::new(ffi::kAudioUnitType_Output,
-                                                  0,
-                                                  ffi::kAudioUnitManufacturer_Apple);
+    where
+        F: Fn(&AudioComponent) -> bool,
+    {
+        let desc = AudioComponentDescription::new(
+            ffi::kAudioUnitType_Output,
+            0,
+            ffi::kAudioUnitManufacturer_Apple,
+        );
         match AudioComponent::iter(desc.as_ref()).find(|c| f(c)) {
             Some(c) => c.new().map(|ci| Some(ci.into())),
             None => Ok(None),
@@ -58,7 +61,7 @@ impl ::std::convert::From<AudioComponentInstance> for AudioOutputUnit {
     fn from(ci: AudioComponentInstance) -> Self {
         let ptr = ci.as_ptr();
         mem::forget(ci);
-        unsafe { ForeignType::from_ptr(ptr) }
+        unsafe { AudioOutputUnit::from_ptr(ptr) }
     }
 }
 
@@ -85,94 +88,77 @@ impl AudioOutputUnitRef {
         Ok(self.get_property::<u32>(AudioOutputUnit::IS_RUNNING, Global, 0)? != 0)
     }
 
-    pub fn channel_map(&self,
-                       scope: AudioUnitScope,
-                       element: AudioUnitElement)
-                       -> Result<Vec<i32>>
-    {
+    pub fn channel_map(
+        &self,
+        scope: AudioUnitScope,
+        element: AudioUnitElement,
+    ) -> Result<Vec<i32>> {
         self.get_property_array(AudioOutputUnit::CHANNEL_MAP, scope, element)
     }
 
-    pub fn enable_io(&self,
-                     scope: AudioUnitScope)
-                     -> Result<bool>
-    {
+    pub fn enable_io(&self, scope: AudioUnitScope) -> Result<bool> {
         let element = if scope == Input { 1 } else { 0 };
-        Ok(try!(self.get_property::<u32>(AudioOutputUnit::ENABLE_IO, scope, element)) !=
-           0)
+        Ok(
+            try!(self.get_property::<u32>(AudioOutputUnit::ENABLE_IO, scope, element))
+                != 0,
+        )
     }
 
     // pub fn input_callback(&self) -> AURenderCallbackStruct {
     //     self.get_property(AudioOutputUnit::SET_INPUT_CALLBACK, Global, 0)
     // }
 
-    pub fn has_io(&self,
-                  scope: AudioUnitScope)
-                  -> Result<bool>
-    {
+    pub fn has_io(&self, scope: AudioUnitScope) -> Result<bool> {
         let element = if scope == Input { 1 } else { 0 };
         Ok(try!(self.get_property::<u32>(AudioOutputUnit::HAS_IO, scope, element)) != 0)
     }
 
     pub fn start_timestamps_at_zero(&self) -> Result<bool> {
-        Ok(try!(self.get_property::<u32>(AudioOutputUnit::START_TIMESTAMPS_AT_ZERO,
-                                         Global,
-                                         0,)) != 0)
+        Ok(try!(self.get_property::<u32>(
+            AudioOutputUnit::START_TIMESTAMPS_AT_ZERO,
+            Global,
+            0,
+        )) != 0)
     }
 
-    pub fn set_current_device(&mut self,
-                              device: &AudioDevice)
-                              -> Result<()>
-    {
+    pub fn set_current_device(&mut self, device: &AudioDevice) -> Result<()> {
         self.set_property(AudioOutputUnit::CURRENT_DEVICE, Global, 0, device)
     }
 
-    pub fn set_channel_map(&mut self,
-                           scope: AudioUnitScope,
-                           element: AudioUnitElement,
-                           data: &[i32])
-                           -> Result<()>
-    {
+    pub fn set_channel_map(
+        &mut self,
+        scope: AudioUnitScope,
+        element: AudioUnitElement,
+        data: &[i32],
+    ) -> Result<()> {
         self.set_property_array(AudioOutputUnit::CHANNEL_MAP, scope, element, data)
     }
 
-    pub fn set_enable_io(&mut self,
-                         scope: AudioUnitScope,
-                         enable: bool)
-                         -> Result<()>
-    {
+    pub fn set_enable_io(&mut self, scope: AudioUnitScope, enable: bool) -> Result<()> {
         let element = if scope == Input { 1 } else { 0 };
         let data = if enable { 1u32 } else { 0u32 };
         self.set_property(AudioOutputUnit::ENABLE_IO, scope, element, &data)
     }
 
-    pub fn set_start_time(&mut self,
-                          start_time: &AudioTimeStampRef)
-                          -> Result<()>
-    {
+    pub fn set_start_time(&mut self, start_time: &AudioTimeStampRef) -> Result<()> {
         let timestamp = unsafe { *start_time.as_ptr() };
-        let data = ffi::AudioOutputUnitStartAtTimeParams { mTimestamp: timestamp,
-                                                           mFlags: 0, };
+        let data = ffi::AudioOutputUnitStartAtTimeParams {
+            mTimestamp: timestamp,
+            mFlags: 0,
+        };
         self.set_property(AudioOutputUnit::START_TIME, Global, 0, &data)
     }
 
-    pub fn set_start_timestamps_at_zero(&mut self,
-                                        enable: bool)
-                                        -> Result<()>
-    {
+    pub fn set_start_timestamps_at_zero(&mut self, enable: bool) -> Result<()> {
         let data: u32 = if enable { 1 } else { 0 };
         self.set_property(AudioOutputUnit::START_TIMESTAMPS_AT_ZERO, Global, 0, &data)
     }
-
 
     pub fn volume(&self) -> Result<f32> {
         self.get_parameter(AudioOutputUnit::VOLUME, Global, 0)
     }
 
-    pub fn set_volume(&mut self,
-                      volume: f32)
-                      -> Result<()>
-    {
+    pub fn set_volume(&mut self, volume: f32) -> Result<()> {
         self.set_parameter(AudioOutputUnit::VOLUME, Global, 0, volume)
     }
 }
@@ -181,7 +167,7 @@ impl ops::Deref for AudioOutputUnitRef {
     type Target = AudioUnitRef;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { ForeignTypeRef::from_ptr(self.as_ptr()) }
+        unsafe { AudioUnitRef::from_ptr(self.as_ptr()) }
     }
 }
 
